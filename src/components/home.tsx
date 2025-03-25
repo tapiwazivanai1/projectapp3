@@ -1,68 +1,36 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 
 import Header from "./layout/Header";
 import LoginForm from "./auth/LoginForm";
-import IndividualDashboard from "./dashboard/IndividualDashboard";
-import BranchDashboard from "./dashboard/BranchDashboard";
-import AdminDashboard from "./dashboard/AdminDashboard";
+import { useAuth } from "./auth/AuthContext";
 
 const Home = () => {
   const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState<"individual" | "branch" | "admin">(
-    "individual",
-  );
-  const [userName, setUserName] = useState("");
+  const { isLoggedIn, user, login, logout } = useAuth();
 
   const handleLogin = (values: {
     email: string;
     password: string;
     role: "individual" | "branch" | "admin";
   }) => {
-    // In a real app, this would validate credentials with a backend service
-    setIsLoggedIn(true);
-    setUserRole(values.role);
-    setUserName(values.email.split("@")[0]);
-
-    // Navigate to appropriate dashboard based on role
-    // This is just for demonstration - in a real app, routing would be handled differently
-    // navigate(`/${values.role}-dashboard`);
+    // Use the auth context login function
+    login(values.email, values.password, values.role);
+    // Navigate to dashboard after successful login
+    navigate("/dashboard");
   };
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUserRole("individual");
-    setUserName("");
-  };
-
-  // Render appropriate dashboard based on user role
-  const renderDashboard = () => {
-    switch (userRole) {
-      case "individual":
-        return <IndividualDashboard userName={userName} />;
-      case "branch":
-        return <BranchDashboard branchName={`${userName}'s Branch`} />;
-      case "admin":
-        return <AdminDashboard userName={userName} />;
-      default:
-        return <IndividualDashboard />;
-    }
+  const handleLoginSuccess = () => {
+    navigate("/dashboard");
   };
 
   return (
     <div className="min-h-screen bg-gray-100">
       {isLoggedIn ? (
-        <>
-          <Header
-            userName={userName}
-            userRole={userRole}
-            onLogout={handleLogout}
-          />
-          {renderDashboard()}
-        </>
+        // If logged in, redirect to dashboard
+        navigate("/dashboard")
       ) : (
         <div className="min-h-screen flex flex-col">
           {/* Hero Section */}
@@ -121,7 +89,10 @@ const Home = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="w-full md:w-1/2 bg-white p-8 md:p-16 flex items-center justify-center"
             >
-              <LoginForm onSubmit={handleLogin} />
+              <LoginForm
+                onSubmit={handleLogin}
+                onLoginSuccess={handleLoginSuccess}
+              />
             </motion.div>
           </div>
         </div>

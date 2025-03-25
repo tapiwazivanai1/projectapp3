@@ -35,11 +35,13 @@ type FormValues = z.infer<typeof formSchema>;
 interface LoginFormProps {
   onSubmit?: (values: FormValues) => void;
   isLoading?: boolean;
+  onLoginSuccess?: () => void;
 }
 
 const LoginForm = ({
   onSubmit = () => {},
   isLoading = false,
+  onLoginSuccess,
 }: LoginFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -54,6 +56,9 @@ const LoginForm = ({
 
   const handleSubmit = (values: FormValues) => {
     onSubmit(values);
+    if (onLoginSuccess) {
+      onLoginSuccess();
+    }
   };
 
   return (

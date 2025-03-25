@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -12,6 +12,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Bell, ChevronDown, Menu } from "lucide-react";
+import { useAuth } from "../auth/AuthContext";
 
 interface HeaderProps {
   userName?: string;
@@ -27,6 +28,21 @@ const Header = ({
   onLogout = () => console.log("Logout clicked"),
 }: HeaderProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  // Use props if provided, otherwise fall back to auth context
+  const displayName = userName || (user ? user.userName : "Guest");
+  const displayRole = userRole || (user ? user.role : "individual");
+
+  const handleLogout = () => {
+    if (onLogout) {
+      onLogout();
+    } else {
+      logout();
+      navigate("/");
+    }
+  };
 
   const roleLabel = {
     individual: "Member",
@@ -41,10 +57,10 @@ const Header = ({
   ];
 
   // Add role-specific links
-  if (userRole === "branch" || userRole === "admin") {
+  if (displayRole === "branch" || displayRole === "admin") {
     navigationLinks.push({ name: "Members", href: "/members" });
   }
-  if (userRole === "admin") {
+  if (displayRole === "admin") {
     navigationLinks.push({ name: "System", href: "/system" });
   }
 
@@ -96,17 +112,19 @@ const Header = ({
                 className="flex items-center space-x-2 hover:bg-white/10"
               >
                 <Avatar className="h-8 w-8 border border-gold/30">
-                  <AvatarImage src={userAvatar} alt={userName} />
+                  <AvatarImage src={userAvatar} alt={displayName} />
                   <AvatarFallback className="bg-red-800 text-white">
-                    {userName
+                    {displayName
                       .split(" ")
                       .map((name) => name[0])
                       .join("")}
                   </AvatarFallback>
                 </Avatar>
                 <div className="hidden md:block text-left">
-                  <p className="text-sm font-medium">{userName}</p>
-                  <p className="text-xs text-white/60">{roleLabel[userRole]}</p>
+                  <p className="text-sm font-medium">{displayName}</p>
+                  <p className="text-xs text-white/60">
+                    {roleLabel[displayRole]}
+                  </p>
                 </div>
                 <ChevronDown size={16} className="text-white/60" />
               </Button>
@@ -125,7 +143,7 @@ const Header = ({
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onLogout} className="text-red-500">
+              <DropdownMenuItem onClick={handleLogout} className="text-red-500">
                 Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
